@@ -217,6 +217,8 @@ public class Phase2CodeFileManipulator {
 
             if(diagramInfo.isHaveDestructor(attribute.getValueType().getTypeName()))
                 builder.append(deleteManipulate);
+//            else
+//                builder.append(freeKeyword);
 
             if(diagramInfo.isHaveDestructor(attribute.getValueType().getTypeName()))
                 builder.append(openParenthesis).append(and).append(attribute.getName())
@@ -436,107 +438,6 @@ public class Phase2CodeFileManipulator {
             lineState = LineState.DEFINITELY_NOT_A_INITIALIZER;
     }
 
-    private void handleOpenParenthesis(Pair<TokenTypes, String> token) {
-        pairVector.add(token);
-        increaseParenthesis();
-    }
-
-    private void handleCloseParenthesis(Pair<TokenTypes, String> token) {
-        decreaseParenthesis();
-        pairVector.add(token);
-    }
-
-    private void handleOpenCurlyBracket(Pair<TokenTypes, String> token) {
-        pairVector.add(token);
-        increaseCurlyBracket();
-    }
-
-    private void handleCloseCurlyBracket(Pair<TokenTypes, String> token) {
-        decreaseCurlyBracket();
-        pairVector.add(token);
-        flush();
-    }
-
-    private void handleSimpleToken(Pair<TokenTypes, String> token) {
-        pairVector.add(token);
-    }
-
-    private void handleClassOrIdentifierToken(Pair<TokenTypes, String> token) {
-        if(diagramInfo.getClassNames().contains(token.getValue1()))
-        {
-            pairVector.add(new Pair<>(TokenTypes.CLASS_TYPE, token.getValue1()));
-            lastClassCalled = token.getValue1();
-            classTypeCalled();
-        }
-        else
-        {
-            pairVector.add(new Pair<>(TokenTypes.ID, token.getValue1()));
-            addID();
-        }
-    }
-
-    private void handleThisToken() {
-        pairVector.add(new Pair<>(TokenTypes.ID, thisManipulated));
-        addID();
-    }
-
-    private void handleTypeDetailToken(Pair<TokenTypes, String> token) {
-        pairVector.add(new Pair<>(TokenTypes.TYPE_DETAIL, token.getValue1()));
-        typeDetailAdded();
-    }
-
-    private void handleSeparatorWithChange(Pair<TokenTypes, String> token) {
-        changeToDefinitelyNotAInitializer();
-        pairVector.add(new Pair<>(TokenTypes.SEPARATOR, token.getValue1()));
-    }
-
-    private void handleDeleteToken() {
-        changeToDefinitelyNotAInitializer();
-        pairVector.add(new Pair<>(TokenTypes.SEPARATOR, deleteManipulate));
-    }
-
-    private void handleSeparatorToken(Pair<TokenTypes, String> token) {
-        pairVector.add(new Pair<>(TokenTypes.SEPARATOR, token.getValue1()));
-    }
-
-    private void handleDoubleColon() {
-        changeToDefinitelyNotAInitializer();
-        internalMethodShowedUp();
-    }
-
-    private void handleDestruct() {
-        changeToDefinitelyNotAInitializer();
-        destructorSignShowedUp();
-    }
-
-    private void handleTypeSpecifier(Pair<TokenTypes, String> token) {
-        changeToDefinitelyNotAInitializer();
-        pairVector.add(new Pair<>(TokenTypes.TYPE_SPECIFIER, token.getValue1()));
-        typeSpecifierAdded();
-    }
-
-    private void handleClassToken() {
-        pairVector.add(new Pair<>(TokenTypes.CLASS, CLanguageTokens.unionKeyword));
-        classKeywordCalled();
-    }
-
-    private void handleUnknownOrMacro(Pair<TokenTypes, String> token) {
-        changeToDefinitelyNotAInitializer();
-        pairVector.add(token);
-    }
-
-    private void handleSemiColon(Pair<TokenTypes, String> token) {
-        pairVector.add(token);
-        flush();
-    }
-
-    private void handleReturn(Pair<TokenTypes, String> token) {
-        printStringLine(openCurlyBracket, true);
-        printStack();
-        pairVector.add(token);
-        lineState = LineState.RETURN_LINE;
-    }
-
     private void generatePhase2(Vector<Pair<TokenTypes, String>> tokens)
     {
         this.depthOfParenthesis = 0;
@@ -550,16 +451,21 @@ public class Phase2CodeFileManipulator {
             switch (token.getValue0())
             {
                 case OPEN_PARENTHESIS:
-                    handleOpenParenthesis(token);
+                    pairVector.add(token);
+                    increaseParenthesis();
                     break;
                 case CLOSE_PARENTHESIS:
-                    handleCloseParenthesis(token);
+                    decreaseParenthesis();
+                    pairVector.add(token);
                     break;
                 case OPEN_CURLY_BRACKET:
-                    handleOpenCurlyBracket(token);
+                    pairVector.add(token);
+                    increaseCurlyBracket();
                     break;
                 case CLOSE_CURLY_BRACKET:
-                    handleCloseCurlyBracket(token);
+                    decreaseCurlyBracket();
+                    pairVector.add(token);
+                    flush();
                     break;
                 case OPEN_SQUARE_BRACKET:
                 case CLOSE_SQUARE_BRACKET:
@@ -569,7 +475,7 @@ public class Phase2CodeFileManipulator {
                 case REFERENCE:
                 case STAR:
                 case COMMA:
-                    handleSimpleToken(token);
+                    pairVector.add(token);
                     break;
                 case EMPTY_STRING:
                 case COMMENT:
@@ -582,10 +488,21 @@ public class Phase2CodeFileManipulator {
                 case DESTRUCTOR:
                 case METHOD:
                 case ATTRIBUTE:
-                    handleClassOrIdentifierToken(token);
-                    break;
+                    if(diagramInfo.getClassNames().contains(token.getValue1()))
+                    {
+                        pairVector.add(new Pair<>(TokenTypes.CLASS_TYPE, token.getValue1()));
+                        lastClassCalled = token.getValue1();
+                        classTypeCalled();
+                    }
+                    else
+                    {
+                        pairVector.add(new Pair<>(TokenTypes.ID, token.getValue1()));
+                        addID();
+                    }
+                break;
                 case THIS:
-                    handleThisToken();
+                    pairVector.add(new Pair<>(TokenTypes.ID, thisManipulated));
+                    addID();
                     break;
                 case CONST:
                 case VOLATILE:
@@ -595,48 +512,61 @@ public class Phase2CodeFileManipulator {
                 case AUTO:
                 case REGISTER:
                 case SIGN:
-                    handleTypeDetailToken(token);
+                    pairVector.add(new Pair<>(TokenTypes.TYPE_DETAIL, token.getValue1()));
+                    typeDetailAdded();
                     break;
                 case ELLIPSIS:
                 case TILDA:
-                    handleSeparatorWithChange(token);
+                    changeToDefinitelyNotAInitializer();
+                    pairVector.add(new Pair<>(TokenTypes.SEPARATOR, token.getValue1()));
                     break;
                 case DELETE:
-                    handleDeleteToken();
+                    changeToDefinitelyNotAInitializer();
+                    pairVector.add(new Pair<>(TokenTypes.SEPARATOR, deleteManipulate));
                     break;
                 case OPERATOR_OR_ASSIGN:
                 case STRING:
                 case NUMBER:
                 case MALLOC:
                 case SIZEOF:
-                    handleSeparatorToken(token);
+                    pairVector.add(new Pair<>(TokenTypes.SEPARATOR, token.getValue1()));
                     break;
                 case DOUBLE_COLON:
-                    handleDoubleColon();
+                    changeToDefinitelyNotAInitializer();
+                    internalMethodShowedUp();
                     break;
                 case DESTRUCT:
-                    handleDestruct();
+                    changeToDefinitelyNotAInitializer();
+                    destructorSignShowedUp();
                     break;
                 case STRUCT:
                 case UNION:
                 case TYPES:
                 case ENUM:
-                    handleTypeSpecifier(token);
+                    changeToDefinitelyNotAInitializer();
+                    pairVector.add(new Pair<>(TokenTypes.TYPE_SPECIFIER, token.getValue1()));
+                    typeSpecifierAdded();
                     break;
                 case CLASS:
-                    handleClassToken();
+                    pairVector.add(new Pair<>(TokenTypes.CLASS, CLanguageTokens.unionKeyword));
+                    classKeywordCalled();
                     break;
                 case UNKNOWN:
                 case MACRO:
                 case COLON:
                 case RESERVED_KEYWORD:
-                    handleUnknownOrMacro(token);
+                    changeToDefinitelyNotAInitializer();
+                    pairVector.add(token);
                     break;
                 case SEMI_COLON:
-                    handleSemiColon(token);
+                    pairVector.add(token);
+                    flush();
                     break;
                 case RETURN:
-                    handleReturn(token);
+                    printStringLine(openCurlyBracket, true);
+                    printStack();
+                    pairVector.add(token);
+                    lineState = LineState.RETURN_LINE;
                     break;
                 default:
                     break;
