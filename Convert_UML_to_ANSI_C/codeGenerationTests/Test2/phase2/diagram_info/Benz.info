@@ -1,0 +1,6 @@
+class:Benz
+parent:Car
+constructor:0
+destructor:0
+method:model
+method:info

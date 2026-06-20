@@ -1,0 +1,22 @@
+Bad Smells Identified:
+
+1. Long Method: The generatePhase2 method in Phase2CodeFileManipulator.java is extremely long (over 200 lines) with complex logic.
+
+2. Large Class: Phase2CodeFileManipulator.java is 576 lines long, handling tokenization, state management, code generation, and file writing all in one class.
+
+3. Duplicate Code: Phase1CodeGenerator.java contains many repetitive methods for generating headers, bodies, constructors, destructors, etc. with similar patterns.
+
+4. Switch Statement Smell: Massive switch statement in generatePhase2() handling dozens of token types with nested state changes.
+
+5. Feature Envy: Phase1CodeGenerator and Complete* classes heavily use static constants from CLanguageTokens and logic that belongs elsewhere.
+
+6. Inappropriate Intimacy: Multiple classes (Main, ClassDiagram, etc.) directly access and modify static fields in Main like document, transformer.
+
+7. Primitive Obsession + Magic Strings/Numbers: Heavy reliance on string constants, magic counters (e.g. counter % 15, %4 in Main.java), and no domain objects for tokens/states.
+
+Refactorings to perform:
+1. Extract Class (Phase1CodeGenerator)
+2. Extract Method + Replace Conditional with Polymorphism (Phase2)
+3. Remove Feature Envy (extract helper)
+4. Extract Class for diagram info handling
+

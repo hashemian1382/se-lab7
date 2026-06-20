@@ -1,0 +1,21 @@
+classBaseUML:
+  1: get directory of phase1 output
+
+diagramGUI:
+  1: get directory of phase1 output
+  2: Show diagram
+  3: make 2 phase controller
+  4: redesign info getter
+
+CodeGeneration:
+  1: output status if failed and when it failed (do it for first and final)
+  2: result dependency (do it for first and final)
+  3: check header upper method call
+  4: free function
+  5: generic
+
+test:
+  1: phase1 and 2 total
+  2: xml*
+  3: BasicDiagramStatus+
+  4: graphBaseDependency+
