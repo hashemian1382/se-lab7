@@ -8,74 +8,86 @@ import java.util.Vector;
 
 import static com.project.lexicalAnalyzer.CLanguageTokens.*;
 
-///TODO delete this and move all functions into Complete* classes
 public class Phase1CodeGenerator {
 
     boolean successFull;
 
-    /// TODO move to CompleteDiagram
     public Phase1CodeGenerator(CompleteDiagram diagram)
     {
         successFull = false;
         if(diagram.isSuccessCode())
         {
             try {
-                File f = new File("phase1");
-                f.mkdir();
-                f = new File("headers");
-                f.mkdir();
-                f = new File("diagram_info");
-                f.mkdir();
+                ensureDirectoriesExist();
 
-                OutputStream headersOutputStream = new FileOutputStream("headers/AllClasses.h");
-                headersOutputStream.write(
-                        generateAllClassesHeaderFile(diagram.allClassNames(),"AllClasses.h").getBytes());
-                headersOutputStream.flush();
-                headersOutputStream.close();
-
-                OutputStream overloadOutputStream = new FileOutputStream("headers/overload.h");
-                overloadOutputStream.write(
-                        generateOverloadFile(diagram.allClassNames(), "overload.h").getBytes());
-                overloadOutputStream.flush();
-                overloadOutputStream.close();
-
-                OutputStream allInfoOutputStream = new FileOutputStream("diagram_info/AllClasses.info");
-                allInfoOutputStream.write(diagram.generateClassNamesSeparatedByNewline().getBytes());
-                allInfoOutputStream.flush();
-                allInfoOutputStream.close();
+                writeAllClassesHeader(diagram);
+                writeOverloadFile(diagram);
+                writeDiagramInfo(diagram);
 
                 for(CompleteClass completeClass:diagram.getClasses())
                 {
-                    OutputStream CPPFileOutputStream =
-                            new FileOutputStream("phase1/" + completeClass.getName() + "Class.cpp");
-                    CPPFileOutputStream.write(generateClassCPP(completeClass).getBytes());
-                    CPPFileOutputStream.flush();
-                    CPPFileOutputStream.close();
-
-                    OutputStream headerFileOutputStream =
-                            new FileOutputStream("headers/" + generateHeaderName(completeClass.getName()));
-                    headerFileOutputStream.write(generateClassHeaderFile(completeClass).getBytes());
-                    headerFileOutputStream.flush();
-                    headerFileOutputStream.close();
-
-                    OutputStream CFileOutputStream =
-                            new FileOutputStream("headers/c_" + completeClass.getName() + ".c");
-                    CFileOutputStream.write(generateClassC(completeClass, diagram.allClassNames()).getBytes());
-                    CFileOutputStream.flush();
-                    CFileOutputStream.close();
-
-                    OutputStream infoFileOutputStream =
-                            new FileOutputStream("diagram_info/" + completeClass.getName() + ".info");
-                    infoFileOutputStream.write(completeClass.getPhase2Info().getBytes());
-                    infoFileOutputStream.flush();
-                    infoFileOutputStream.close();
-
+                    writeClassFiles(completeClass, diagram.allClassNames());
                 }
                 successFull = true;
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
+    }
+
+    private void ensureDirectoriesExist() throws IOException {
+        new File("phase1").mkdir();
+        new File("headers").mkdir();
+        new File("diagram_info").mkdir();
+    }
+
+    private void writeAllClassesHeader(CompleteDiagram diagram) throws IOException {
+        OutputStream headersOutputStream = new FileOutputStream("headers/AllClasses.h");
+        headersOutputStream.write(
+                generateAllClassesHeaderFile(diagram.allClassNames(),"AllClasses.h").getBytes());
+        headersOutputStream.flush();
+        headersOutputStream.close();
+    }
+
+    private void writeOverloadFile(CompleteDiagram diagram) throws IOException {
+        OutputStream overloadOutputStream = new FileOutputStream("headers/overload.h");
+        overloadOutputStream.write(
+                generateOverloadFile(diagram.allClassNames(), "overload.h").getBytes());
+        overloadOutputStream.flush();
+        overloadOutputStream.close();
+    }
+
+    private void writeDiagramInfo(CompleteDiagram diagram) throws IOException {
+        OutputStream allInfoOutputStream = new FileOutputStream("diagram_info/AllClasses.info");
+        allInfoOutputStream.write(diagram.generateClassNamesSeparatedByNewline().getBytes());
+        allInfoOutputStream.flush();
+        allInfoOutputStream.close();
+    }
+
+    private void writeClassFiles(CompleteClass completeClass, Vector<String> allClassNames) throws IOException {
+        OutputStream CPPFileOutputStream =
+                new FileOutputStream("phase1/" + completeClass.getName() + "Class.cpp");
+        CPPFileOutputStream.write(generateClassCPP(completeClass).getBytes());
+        CPPFileOutputStream.flush();
+        CPPFileOutputStream.close();
+
+        OutputStream headerFileOutputStream =
+                new FileOutputStream("headers/" + generateHeaderName(completeClass.getName()));
+        headerFileOutputStream.write(generateClassHeaderFile(completeClass).getBytes());
+        headerFileOutputStream.flush();
+        headerFileOutputStream.close();
+
+        OutputStream CFileOutputStream =
+                new FileOutputStream("headers/c_" + completeClass.getName() + ".c");
+        CFileOutputStream.write(generateClassC(completeClass, allClassNames).getBytes());
+        CFileOutputStream.flush();
+        CFileOutputStream.close();
+
+        OutputStream infoFileOutputStream =
+                new FileOutputStream("diagram_info/" + completeClass.getName() + ".info");
+        infoFileOutputStream.write(completeClass.getPhase2Info().getBytes());
+        infoFileOutputStream.flush();
+        infoFileOutputStream.close();
     }
 
     private String generateOverloadFile(Vector<String> classes, String fileName) {
@@ -164,27 +176,24 @@ public class Phase1CodeGenerator {
             tab + lineComment + whiteSpace + "TODO:code here" + newLine +
             closeCurlyBracket + newLine + newLine;
 
-    /// TODO move to CompleteClass
     public static String generateDestructor(String className)
     {
         String baseClassName = className + destruct + className + openParenthesis + closeParenthesis;
         return baseClassName + EmptyBlock;
     }
 
-    /// TODO move to CompleteClass
     public static String generateHeaderName(String className)
     {
         return className + "Class.h";
     }
 
-    /// TODO move to CompleteClass
     public static String generateClassHeaderFile(CompleteClass completeClass)
     {
         StringBuilder allLines = new StringBuilder();
         String fileName = generateHeaderName(completeClass.getName());
         allLines.append(generateIncludeGuard(fileName));
         allLines.append(newLine);
-        allLines.append(generateIncludeClassHeader("AllClasses.h"));//TODO replace AllClasses.h with a PSVSf
+        allLines.append(generateIncludeClassHeader("AllClasses.h"));
         allLines.append(newLine);
         allLines.append(generateIncludesForAClass(completeClass.getParents(), completeClass.getName()));
         allLines.append(newLine);
@@ -208,7 +217,6 @@ public class Phase1CodeGenerator {
         return allLines.toString();
     }
 
-    /// TODO move to CompleteClass
     public static String generateIncludesForAClass(Vector<String> classes, String theClassName)
     {
         StringBuilder allLines = new StringBuilder();
@@ -218,7 +226,6 @@ public class Phase1CodeGenerator {
         return allLines.toString();
     }
 
-    /// TODO move to CompleteClass
     public static String generateUnionDefinitions(CompleteClass completeClass, String className)
     {
         StringBuilder allLines = new StringBuilder();
@@ -240,7 +247,6 @@ public class Phase1CodeGenerator {
         return allLines.toString();
     }
 
-    /// TODO move to CompleteClass
     public static String generateMethodDefinitions(Vector<Pair<String, CompleteMethod>> methods, String className)
     {
         StringBuilder allLines = new StringBuilder();
@@ -249,7 +255,6 @@ public class Phase1CodeGenerator {
         return allLines.toString();
     }
 
-    /// TODO move to CompleteClass
     public static String generateConstructorDefinitions(Vector<CompleteConstructor> constructors, String className)
     {
         StringBuilder allLines = new StringBuilder();
@@ -261,7 +266,6 @@ public class Phase1CodeGenerator {
         return allLines.toString();
     }
 
-    /// TODO move to CompleteDiagram
     public static String generateAllClassesHeaderFile(Vector<String> classes, String fileName)
     {
         StringBuilder allLines = new StringBuilder();
@@ -276,13 +280,11 @@ public class Phase1CodeGenerator {
         return allLines.toString();
     }
 
-    /// TODO move to CompleteClass
     public static String generateOneInlineDefinitionOfClass(String className)
     {
         return unionKeyword + whiteSpace + className + semiColon;
     }
 
-    /// TODO move to CompleteClass
     public static String generateInlineDefinitionOfClass(Vector<String> classNames)
     {
         StringBuilder allLines = new StringBuilder();
@@ -292,13 +294,11 @@ public class Phase1CodeGenerator {
         return allLines.toString();
     }
 
-    /// TODO move to CompleteClass
     public static String generateOneUnionUsage(String className)
     {
         return tab + unionKeyword + whiteSpace + className + whiteSpace + unionKeyword + className + semiColon + newLine;
     }
 
-    /// TODO move to CompleteClass
     public static String generateUnionUsage(Vector<String> classNames, String theClassName)
     {
         StringBuilder allLines = new StringBuilder();
@@ -309,7 +309,6 @@ public class Phase1CodeGenerator {
         return allLines.toString();
     }
 
-    /// TODO move to CompleteClass
     public static String generateIncludeGuard(String headerFile)
     {
         String key = underscore + headerFile.toUpperCase().replace(dot, underscore) + underscore;
@@ -317,19 +316,16 @@ public class Phase1CodeGenerator {
                 sharp + defineKeyword + whiteSpace + key + newLine;
     }
 
-    /// TODO move to CompleteClass
     public static String generateEndGuard()
     {
         return sharp + endif + newLine;
     }
 
-    /// TODO move to CompleteClass
     public static String generateIncludeClassHeader(String headerFile)
     {
         return sharp + includeKeyword + whiteSpace + doubleQuotation + headerFile + doubleQuotation + newLine;
     }
 
-    /// TODO move to CompleteClass
     public static String generateClassCPP(CompleteClass completeClass)
     {
         StringBuilder base = new StringBuilder();
