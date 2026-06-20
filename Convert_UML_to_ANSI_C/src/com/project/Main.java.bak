@@ -29,10 +29,6 @@ public class Main implements Runnable{
     static public GUIDiagram guiDiagram;
     static private int counter = 0;
 
-    private static final int GUI_STATUS_CHECK_INTERVAL = 15;
-    private static final int PHASE1_GENERATION_INTERVAL = 4;
-    private static final int GUI_SLEEP_MILLIS = 1999;
-
     private static void generateInfoForXML(String fileName)
     {
         String xmlString;
@@ -151,7 +147,7 @@ public class Main implements Runnable{
     private static void loopOnGUI()
     {
         counter += 1;
-        if(counter % GUI_STATUS_CHECK_INTERVAL == 0)
+        if(counter % 15 == 0)
         {
             BasicDiagramStatus status = guiDiagram.getStatusType();
             System.out.println("code:" + status.getBasicDiagramStatusCode());
@@ -165,7 +161,7 @@ public class Main implements Runnable{
                 System.out.println("Dependency Number:" + result.getDependencyNumber());
                 System.out.println(Arrays.toString(result.getAllCycles()));
                 System.out.println();
-                if(counter % PHASE1_GENERATION_INTERVAL == 0 && result.getDependencyNumber() != 0)
+                if(counter %4 == 0 && result.getDependencyNumber() != 0)
                 {
                     MethodOverloader.getOverloadTable().clear();
                     CompleteDiagram completeDiagram = new CompleteDiagram(guiDiagram);
@@ -201,7 +197,7 @@ public class Main implements Runnable{
     public void run() {
         do {
             try {
-                sleep(GUI_SLEEP_MILLIS);
+                sleep(1999);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
