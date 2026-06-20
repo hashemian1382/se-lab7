@@ -54,7 +54,7 @@ public class Phase2CodeGenerator {
 
     }
 
-    public boolean isSuccessful() {
+    public boolean isSuccessful(){
         return successful;
     }
 }
